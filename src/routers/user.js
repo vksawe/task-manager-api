@@ -52,14 +52,20 @@ userRouter.patch("/users/:id", async (req, res) => {
       return allowedUpdates.includes(update);
     });
     if (isValidOperation) {
-      const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-        runValidators: true,
-        new: true,
+      const user = await User.findById(req.params.id);
+      updates.forEach((update) => {
+        user[update] = req.body[update];
       });
-      if (!user) {
+      const savedUser=await user.save();
+      // const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+      //   runValidators: true,
+      //   new: true,
+      // });
+      if (!savedUser) {
         return res.status(404).send();
       }
-      return res.status(200).send(user);
+      console.log(savedUser)
+      return res.status(200).send(savedUser);
     }
 
     throw new Error("Invalid Operation");

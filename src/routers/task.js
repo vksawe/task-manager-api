@@ -53,14 +53,20 @@ taskRouter.patch("/tasks/:id", async (req, res) => {
   });
   if (isValidOperation) {
     try {
-      const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
+      // const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
+      //   new: true,
+      //   runValidators: true,
+      // });
+      const task = await Task.findById(req.params.id);
+      updates.forEach((update) => {
+        task[update] = req.body[update];
       });
-      if (!task) {
+      const savedTask=await task.save();
+      if (!savedTask) {
         return res.status(404).send("No such user");
       }
-      return res.status(200).send(task);
+      
+      return res.status(200).send(savedTask);
     } catch (e) {
       return res.status(500).send(e);
     }
