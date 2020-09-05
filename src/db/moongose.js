@@ -7,30 +7,3 @@ mongoose.connect(connectionURL, {
 
 
 
-// const newUser = new user({
-//   name: "   vic",
-//   age: 28,
-//   email: "vskiprotich@gmail.com",
-//   password: " dsggfdsfsdf453rd",
-// });
-// newUser
-//   .save()
-//   .then(() => {
-//     console.log("User saved");
-//   })
-//   .catch((e) => {
-//     console.log(e);
-//   });
-
-// task1 = new task({
-//   description: "Deploy to Github",
-// });
-
-// task1
-//   .save()
-//   .then(() => {
-//     console.log("User saved", task1);
-//   })
-//   .catch((e) => {
-//     console.log(e);
-//   });
