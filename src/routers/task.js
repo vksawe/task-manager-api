@@ -1,18 +1,20 @@
 const express = require("express");
+const authenticate = require("../middleware/auth");
 const taskRouter = new express.Router();
 const Task = require("../models/task");
-taskRouter.post("/tasks", async (req, res) => {
+taskRouter.post("/tasks", authenticate, async (req, res) => {
   try {
-    let task = await new Task(req.body).save();
+    task = { ...req.body, owner: req.user._id };
+    await new Task(task).save();
     res.status(201).send(task);
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
-taskRouter.get("/tasks", async (req, res) => {
+taskRouter.get("/tasks",authenticate, async (req, res) => {
   try {
-    let tasks = await Task.find({});
+    let tasks = await Task.find({owner:req.user._id});
     if (!tasks) {
       return res.status(404).send("No tasks found");
     }
@@ -21,21 +23,23 @@ taskRouter.get("/tasks", async (req, res) => {
     res.status(500).send(e);
   }
 });
-taskRouter.get("/tasks/:id", async (req, res) => {
+taskRouter.get("/tasks/:id", authenticate,async (req, res) => {
   try {
-    let task = await Task.findById(req.params.id);
+    const _id=req.params.id
+    let task = await Task.findOne({_id, owner:req.user._id});
     if (!task) {
       return res.status(404).send();
     }
     res.send(task);
   } catch (e) {
+    console.log(e)
     res.status(500).send(e);
   }
 });
 
-taskRouter.delete("/tasks/:id", async (req, res) => {
+taskRouter.delete("/tasks/:id",authenticate, async (req, res) => {
   try {
-    let task = await Task.findByIdAndDelete(req.params.id);
+    let task = await Task.findByIdAndDelete({_id:req.params.id,owner:req.user._id});
     if (!task) {
       return res.status(404).send("No Task found");
     }
@@ -45,7 +49,7 @@ taskRouter.delete("/tasks/:id", async (req, res) => {
   }
 });
 
-taskRouter.patch("/tasks/:id", async (req, res) => {
+taskRouter.patch("/tasks/:id",authenticate, async (req, res) => {
   const allowedUpdates = ["description", "completed"];
   const updates = Object.keys(req.body);
   const isValidOperation = updates.every((update) => {
@@ -57,15 +61,18 @@ taskRouter.patch("/tasks/:id", async (req, res) => {
       //   new: true,
       //   runValidators: true,
       // });
-      const task = await Task.findById(req.params.id);
+      const task = await Task.findOne({_id:req.params.id,owner:req.user._id});
+      if(!task){
+        return res.status(404).send("Task does not exists")
+      }
       updates.forEach((update) => {
         task[update] = req.body[update];
       });
-      const savedTask=await task.save();
+      const savedTask = await task.save();
       if (!savedTask) {
-        return res.status(404).send("No such user");
+        return res.status(500).send("Could not update");
       }
-      
+
       return res.status(200).send(savedTask);
     } catch (e) {
       return res.status(500).send(e);

@@ -11,6 +11,11 @@ const taskSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  owner:{
+    type:mongoose.ObjectId,
+    required:true,
+    ref:'User'
+  }
 });
 
 const task = new mongoose.model("tasks", taskSchema);

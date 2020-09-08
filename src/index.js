@@ -1,4 +1,5 @@
 require("./db/moongose");
+
 const express = require("express");
 const app = express();
 const userRouter = require("./routers/user");
