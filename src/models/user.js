@@ -2,43 +2,53 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Task=require('./task')
-const { JsonWebTokenError } = require("jsonwebtoken");
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  age: { type: Number, required: true, trim: true },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    lowercase: true,
-    validate(value) {
-      if (!validator.isEmail(value)) {
-        throw new Error("Invalid Email");
-      }
-    },
-  },
-  password: {
-    required: true,
-    type: String,
-    minlength: 7,
-    trim: true,
-    validate(value) {
-      if (value.toLowerCase().includes("password")) {
-        throw new Error("Invalid password");
-      }
-    },
-  },
-  tokens: [
-    {
-      token: {
-        required: true,
-        type: String,
+const Task = require("./task");
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    age: { type: Number, required: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Invalid Email");
+        }
       },
     },
-  ],
+    password: {
+      required: true,
+      type: String,
+      minlength: 7,
+      trim: true,
+      validate(value) {
+        if (value.toLowerCase().includes("password")) {
+          throw new Error("Invalid password");
+        }
+      },
+    },
+    tokens: [
+      {
+        token: {
+          required: true,
+          type: String,
+        },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
+userSchema.virtual("tasks", {
+  ref: "tasks",
+  localField: "_id",
+  foreignField: "owner",
 });
+
 userSchema.pre("save", async function (next) {
   const user = this;
   const isModified = user.isModified("password");
@@ -74,18 +84,13 @@ userSchema.methods.toJSON = function () {
   return userObject;
 };
 
-userSchema.virtual('tasks',{
-  ref:'Task',
-  localField:'_id',
-  foreignField:'owner'
-})
 
-userSchema.pre('remove',async function(next){
-const user=this;
+userSchema.pre("remove", async function (next) {
+  const user = this;
 
-task=await Task.deleteMany({owner:user._id})
-next()
-})
+  task = await Task.deleteMany({ owner: user._id });
+  next();
+});
 
 const User = new mongoose.model("User", userSchema);
 
