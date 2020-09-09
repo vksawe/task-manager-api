@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const Task = require("./task");
 const userSchema = new mongoose.Schema(
   {
+    avatar:{type:Buffer},
     name: { type: String, required: true, trim: true },
     age: { type: Number, required: true, trim: true },
     email: {
@@ -81,6 +82,7 @@ userSchema.methods.toJSON = function () {
 
   delete userObject.tokens;
   delete userObject.password;
+  delete userObject.avatar
   return userObject;
 };
 

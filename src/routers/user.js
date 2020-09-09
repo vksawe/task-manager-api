@@ -1,6 +1,19 @@
 const express = require("express");
 const User = require("../models/user");
 const userRouter = new express.Router();
+const multer = require("multer");
+const sharp=require('sharp')
+var upload = multer({
+  limits: {
+    fileSize: 2000000,
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|png|jpeg)$/)) {
+      return cb(new Error("Must be an image file in .JPEG, .JPG and .PNG formats"));
+    }
+    cb(undefined, true);
+  },
+});
 const authenticate = require("../middleware/auth");
 userRouter.post("/users", async (req, res) => {
   try {
@@ -75,7 +88,7 @@ userRouter.delete("/users/me", authenticate, async (req, res) => {
     // if (!user) {
     //   return res.status(404).send("No User found");
     // }
-    user=req.user;
+    user = req.user;
     const deleteUser = await user.remove();
     res.status(200).send(deleteUser);
   } catch (e) {
@@ -87,7 +100,9 @@ userRouter.patch("/users/me", authenticate, async (req, res) => {
   try {
     const updates = Object.keys(req.body);
     const allowedUpdates = ["name", "email", "password", "age"];
-    const isValidOperation = updates.every((update) => {return allowedUpdates.includes(update);});
+    const isValidOperation = updates.every((update) => {
+      return allowedUpdates.includes(update);
+    });
     if (isValidOperation) {
       const user = req.user;
       updates.forEach((update) => {
@@ -101,12 +116,52 @@ userRouter.patch("/users/me", authenticate, async (req, res) => {
       return res.status(200).send(savedUser);
     }
 
-    return res.status(400).send({error:'Invalid Updates'})
+    return res.status(400).send({ error: "Invalid Updates" });
   } catch (e) {
     console.log(e);
     res.status(400).send("Invalid operation");
   }
 });
+
+userRouter.post("/users/me/avatar",authenticate ,upload.single("avatar"), async (req,res)=> {
+  const buffer=await sharp(req.file.buffer).resize({width:250,height:250}).png().toBuffer()
+  req.user.avatar=buffer 
+  await req.user.save();
+  res.send()
+  // req.file is the `avatar` file
+  // req.body will hold the text fields, if there were any
+  res.send("Image upload succesfull");
+},(error,req,res,next)=>{
+  if(error){
+    res.status(400).send(error.message)
+  }
+});
+
+userRouter.delete("/users/me/avatar",authenticate, async (req,res)=>{
+  req.user.avatar=undefined
+  try{
+  await req.user.save()
+  return res.status(200).send("Avatar Deleted succesfully")
+  }catch(e){
+    res.status(500).send("Unable to save")
+  }
+  res
+})
+
+userRouter.get("/users/:id/avatar",async (req,res)=>{
+  try{
+    
+    const user=await User.findById(req.params.id)
+    if(!user||!user.avatar){
+      throw new Error()
+    }
+    res.set('Content-Type','image/png')
+    res.send(user.avatar)
+  }catch(e){
+    res.status(404).send("User Not Found")
+  }
+
+})
 
 module.exports = userRouter;
 

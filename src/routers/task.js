@@ -108,9 +108,9 @@ taskRouter.patch("/tasks/:id", authenticate, async (req, res) => {
   }
   return res.status(400).send("Invalid operation");
 });
-taskRouter.delete("/tasks",authenticate, async (req, res) => {
+taskRouter.delete("/tasks", authenticate, async (req, res) => {
   try {
-    const tasks = await Task.deleteMany({owner:req.user._id});
+    const tasks = await Task.deleteMany({ owner: req.user._id });
     res.status(200).send(tasks);
   } catch (e) {
     console.log(e);
