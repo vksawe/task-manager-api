@@ -72,7 +72,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
 };
 userSchema.methods.generateAuthtoken = async function () {
   const user = this;
-  const token = jwt.sign({ _id: user._id.toString() }, "thenewgeniusinTown");
+  const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
   return token;
 };
 userSchema.methods.toJSON = function () {

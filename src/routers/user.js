@@ -3,6 +3,7 @@ const User = require("../models/user");
 const userRouter = new express.Router();
 const multer = require("multer");
 const sharp=require('sharp')
+const {sendWelcomeEmail,sendOnDeleteEmail}=require('../emails/account')
 var upload = multer({
   limits: {
     fileSize: 2000000,
@@ -21,6 +22,7 @@ userRouter.post("/users", async (req, res) => {
     const token = await user.generateAuthtoken();
     user.tokens = user.tokens.concat({ token });
     await user.save();
+    sendWelcomeEmail(user.email,user.name)
     res.status(201).send({ user, token });
   } catch (e) {
     res.status(400).send(e);
@@ -90,8 +92,10 @@ userRouter.delete("/users/me", authenticate, async (req, res) => {
     // }
     user = req.user;
     const deleteUser = await user.remove();
+    sendOnDeleteEmail(deleteUser.email,deleteUser.name)
     res.status(200).send(deleteUser);
   } catch (e) {
+    console.log(e.message)
     res.status(500).send("");
   }
 });
