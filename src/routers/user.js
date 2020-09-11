@@ -25,7 +25,7 @@ userRouter.post("/users", async (req, res) => {
     sendWelcomeEmail(user.email,user.name)
     res.status(201).send({ user, token });
   } catch (e) {
-    res.status(400).send(e);
+    res.status(500).send();
   }
 });
 
@@ -54,6 +54,9 @@ userRouter.get("/users/me", authenticate, async (req, res) => {
   //   res.status(200).send(users);
   // } catch (e) {
   //   res.status(500).send(e);
+  // }
+  // if(!req.user){
+  //   return res.status(403).send("Please Authenticate")
   // }
   res.status(200).send(req.user);
 });
@@ -93,10 +96,10 @@ userRouter.delete("/users/me", authenticate, async (req, res) => {
     user = req.user;
     const deleteUser = await user.remove();
     sendOnDeleteEmail(deleteUser.email,deleteUser.name)
-    res.status(200).send(deleteUser);
+    return res.status(200).send(deleteUser);
   } catch (e) {
     console.log(e.message)
-    res.status(500).send("");
+    res.status(500).send();
   }
 });
 
